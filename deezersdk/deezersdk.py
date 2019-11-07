@@ -184,6 +184,15 @@ class Deezer:
 
         return artists
 
+    def get_artist(self, artist_id):
+        """
+        Get an artist from his ID
+        :param artist_id:
+        :return: return an Artist
+        :rtype: Artist
+        """
+        response = self.req_get(uri=f'/user/me/artists')
+
     def get_widget(self, tracks=None, playlist=None, width=700, height=400):
         """
         Play a list of tracks or a playlist
