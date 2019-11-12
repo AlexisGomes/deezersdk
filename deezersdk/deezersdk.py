@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import requests
-import webbrowser
 
 
 class Track:
@@ -12,8 +11,11 @@ class Track:
     title = None
     duration = None
     release_date = None
+    album_id = None
+    album_name = None
+    artist_id = None
 
-    def __init__(self, deezer, id, title, duration, release_date=None, **kwargs):
+    def __init__(self, deezer, id, title, duration, release_date=None, album_id=None, album_title=None, **kwargs):
         """
         Create a Track
         :param Deezer deezer: obj to make other requests
@@ -21,6 +23,8 @@ class Track:
         :param str title:
         :param int duration:
         :param date release_date:
+        :param str album_id:
+        :param str album_title:
         :param kwargs: other params (see Deezer's documentation : https://developers.deezer.com/api/track)
         """
 
@@ -30,6 +34,95 @@ class Track:
         self.title = title
         self.duration = duration
         self.release_date = release_date
+        self.album_title = None
+        self.album_id = album_id
+        self.album_title = album_title
+        self.artist_id = None
+
+        if 'album' in kwargs:
+            if 'id' in kwargs['album']:
+                self.album_id = kwargs['album']['id']
+            if 'title' in kwargs['album']:
+                self.album_title = kwargs['album']['title']
+
+        if 'artist' in kwargs:
+            if 'id' in kwargs['artist']:
+                self.artist_id = kwargs['artist']['id']
+
+    def get_album(self):
+        """
+        Call API to get the album
+        :rtype: Album
+        """
+        response = self.deezer.req_get(uri=f'/album/{self.album_id}')
+        return Album(deezer=self.deezer, **response)
+
+    def get_artist(self):
+        """
+        Call API to get the artist
+        :rtype: Artist
+        """
+        response = self.deezer.req_get(uri=f'/artist/{self.artist_id}')
+        return Artist(deezer=self.deezer, **response)
+
+
+class Album:
+
+    deezer = None
+
+    id_ = None
+    title = None
+    nb_tracks = None
+    cover = None
+    track_ids = None
+
+    def __init__(self, deezer, id, title, nb_tracks, cover, tracks, artist, **kwargs):
+        """
+        Create a Track
+        :param Deezer deezer: obj to make other requests
+        :param str id:
+        :param str title:
+        :param str cover:
+        :param dict tracks: dict with information on the tracks
+        :param dict artist: dict with information on the artist
+        :param kwargs: other params (see Deezer's documentation : https://developers.deezer.com/api/album)
+        """
+
+        self.deezer = deezer
+
+        self.id_ = id
+        self.title = title
+        self.nb_tracks = nb_tracks
+        self.cover = cover
+        self.artist_id = None
+
+        self.track_ids = []
+        for track_obj in tracks['data']:
+            self.track_ids.append(track_obj['id'])
+
+        if 'id' in artist:
+            self.artist_id = artist['id']
+
+    def get_tracks(self):
+        """
+        Call API to get the tracks of this album
+        :rtype: List of Track
+        """
+        response = self.deezer.req_get(uri=f'/album/{self.id_}/tracks')
+
+        tracks = []
+        for row in response.get('data'):
+            tracks.append(Track(deezer=self.deezer, album_id=self.id_, album_title=self.title, **row))
+
+        return tracks
+
+    def get_artist(self):
+        """
+        Call API to get the artist of this album
+        :rtype: Artist
+        """
+        response = self.deezer.req_get(uri=f'/artist/{self.artist_id}')
+        return Artist(deezer=self.deezer, **response)
 
 
 class Playlist:
@@ -191,7 +284,8 @@ class Deezer:
         :return: return an Artist
         :rtype: Artist
         """
-        response = self.req_get(uri=f'/user/me/artists')
+        response = self.req_get(uri=f'/artist/{artist_id}')
+        return Artist(deezer=self, **response)
 
     def get_widget(self, tracks=None, playlist=None, width=700, height=400):
         """

@@ -1,1 +1,4 @@
-testing.py
+testing/
+build/
+dist/
+deezersdk.egg-info/
