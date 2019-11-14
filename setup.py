@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='deezersdk',
-    version='0.15',
+    version='0.16',
     packages=setuptools.find_packages(),
     author="Gomes Alexis",
     author_email="alexis.gomes19@gmail.com",

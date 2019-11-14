@@ -200,18 +200,41 @@ class Deezer:
     user_id = None
     tracklist = None
 
-    def __init__(self, app_id, app_secret, code, token):
+    def __init__(self, app_id, token):
+        """
+        :param str app_id:
+        :param str token:
+        """
         self.app_id = app_id
+        self.access_token = token
 
-        if token is None:
-            url = f'https://connect.deezer.com/oauth/access_token.php?app_id={app_id}&secret={app_secret}&code={code}&output=json'
-            print(url)
-            user_response = requests.get(url)
-            print(user_response.json())
-            # TODO get token
-            # TODO get expires
+    @staticmethod
+    def get_oauth_login_url(app_id, redirect_uri):
+        """
+        get the url for the deezer login
+        :param str app_id: your app id
+        :param str redirect_uri: your redirect uri
+        :return:
+        :rtype: str
+        """
+        return f'https://connect.deezer.com/oauth/auth.php?app_id={app_id}&redirect_uri={redirect_uri}&perms=basic_access,email'
+
+    @staticmethod
+    def get_oauth_token(app_id, app_secret, code):
+        """
+        get the oauth token to use the API
+        :param str app_id:
+        :param str app_secret:
+        :param str code:
+        :rtype: str
+        """
+        url = f'https://connect.deezer.com/oauth/access_token.php?app_id={app_id}&secret={app_secret}&code={code}&output=json'
+        response = requests.get(url)
+        if response.text == 'wrong code':
+            return 'wrong code'
         else:
-            self.access_token = token
+            response = response.json()
+            return response['access_token']
 
     def req_get(self, url=None, uri=None,):
         """
